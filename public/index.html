@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>AgentTrader — Paper-only GPT experiment</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-lockup">
+      <div class="brand-mark" aria-hidden="true">AT</div>
+      <div>
+        <h1>AgentTrader</h1>
+        <p>GPT-Max midday paper trader</p>
+      </div>
+    </div>
+    <div class="paper-banner"><span></span> PAPER ONLY · NO REAL ORDERS</div>
+    <div class="top-actions">
+      <button class="button ghost compact" id="refreshButton">Refresh</button>
+      <button class="button ghost compact danger-text" id="shutdownButton">Stop dashboard</button>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="status-rail" aria-label="System status">
+      <div class="rail-item"><span class="eyebrow">Automation</span><strong id="automationRail">Loading</strong></div>
+      <div class="rail-item"><span class="eyebrow">Model</span><strong id="modelRail">GPT-5.6-Sol · Max</strong></div>
+      <div class="rail-item"><span class="eyebrow">Market clock</span><strong id="clockRail">—</strong></div>
+      <div class="rail-item grow"><span class="eyebrow">Next eligible run</span><strong id="nextRunRail">—</strong></div>
+      <div class="rail-item"><span class="eyebrow">Data</span><strong id="dataRail">—</strong></div>
+    </section>
+
+    <section class="hero-grid">
+      <article class="panel account-panel">
+        <div class="panel-heading">
+          <div><span class="eyebrow">Paper equity</span><h2 id="equityValue">$100,000.00</h2></div>
+          <span class="status-pill neutral" id="accountStatus">Ready</span>
+        </div>
+        <div class="metric-row">
+          <div><span>Net P&amp;L</span><strong id="netPnl">$0.00</strong></div>
+          <div><span>Return</span><strong id="netReturn">0.00%</strong></div>
+          <div><span>Max drawdown</span><strong id="drawdown">0.00%</strong></div>
+          <div><span>Win rate</span><strong id="winRate">—</strong></div>
+        </div>
+        <div class="chart-wrap">
+          <svg id="equityChart" viewBox="0 0 720 220" role="img" aria-label="Paper equity curve">
+            <defs>
+              <linearGradient id="equityFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#7df7c4" stop-opacity=".28"></stop>
+                <stop offset="1" stop-color="#7df7c4" stop-opacity="0"></stop>
+              </linearGradient>
+            </defs>
+            <g id="chartGrid"></g><path id="chartArea" fill="url(#equityFill)"></path><path id="chartLine" fill="none" stroke="#7df7c4" stroke-width="3" vector-effect="non-scaling-stroke"></path>
+          </svg>
+          <div class="chart-empty" id="chartEmpty">The equity curve begins after the first settled paper trade.</div>
+        </div>
+        <div class="comparison-row">
+          <div><span>Actual vs. always-long</span><strong id="actualVsLong">$0.00</strong></div>
+          <div><span>Confidence Brier score</span><strong id="brierScore">—</strong></div>
+          <div><span>Current streak</span><strong id="streak">—</strong></div>
+        </div>
+      </article>
+
+      <aside class="panel control-panel">
+        <div class="panel-heading">
+          <div><span class="eyebrow">Experiment controls</span><h3>Next ticker</h3></div>
+          <span class="status-dot" id="controlDot"></span>
+        </div>
+        <form id="tickerForm">
+          <label for="tickerInput">US equity or ETF</label>
+          <div class="input-row">
+            <input id="tickerInput" name="ticker" maxlength="10" autocomplete="off" spellcheck="false" placeholder="e.g. AAPL" required>
+            <button class="button primary" type="submit">Verify &amp; save</button>
+          </div>
+          <p class="field-note" id="tickerNote">Yahoo must verify an active US listing before it is saved.</p>
+        </form>
+        <div class="control-divider"></div>
+        <div class="toggle-row">
+          <div><strong>Scheduled decisions</strong><span>Settlement recovery remains active when paused.</span></div>
+          <button class="toggle" id="automationToggle" role="switch" aria-checked="false"><span></span></button>
+        </div>
+        <div class="button-stack">
+          <button class="button secondary" id="manualTickButton">Run time-gated tick now</button>
+          <button class="button secondary" id="exportButton">Export JSON backup</button>
+          <button class="button text-button" id="newExperimentButton">Start a new $100k experiment</button>
+        </div>
+        <div class="notice" id="actionNotice" aria-live="polite">No action in progress.</div>
+      </aside>
+    </section>
+
+    <section class="content-grid">
+      <article class="panel signal-panel">
+        <div class="panel-heading">
+          <div><span class="eyebrow">Today’s state machine</span><h3 id="signalTitle">Waiting for a ticker</h3></div>
+          <span class="status-pill neutral" id="runStatus">IDLE</span>
+        </div>
+        <div class="signal-summary">
+          <div class="signal-action neutral-signal" id="signalAction">—</div>
+          <div><span>Allocation</span><strong id="signalAllocation">—</strong></div>
+          <div><span>Confidence</span><strong id="signalConfidence">—</strong></div>
+          <div><span>Effective fill</span><strong id="signalFill">—</strong></div>
+          <div><span>Close</span><strong id="signalClose">—</strong></div>
+        </div>
+        <div class="thesis-block"><span class="eyebrow">Thesis</span><p id="signalThesis">No decision has been invoked for this market date.</p></div>
+        <div class="evidence-grid">
+          <div><h4>Evidence</h4><ul id="evidenceList"><li>Frozen Yahoo input will appear here.</li></ul></div>
+          <div><h4>Risks</h4><ul id="riskList"><li>Every signal is experimental and may lose money.</li></ul></div>
+        </div>
+        <div class="invalidation"><span>Invalidation</span><p id="invalidationText">—</p></div>
+      </article>
+
+      <aside class="panel health-panel">
+        <div class="panel-heading"><div><span class="eyebrow">Runtime health</span><h3>Guardrails</h3></div></div>
+        <div class="health-list">
+          <div><span class="health-icon" id="storageIcon"></span><div><strong>Atomic storage</strong><small id="storageHealth">Checking…</small></div></div>
+          <div><span class="health-icon" id="modelIcon"></span><div><strong>Exact OMP model</strong><small id="modelHealth">Checking…</small></div></div>
+          <div><span class="health-icon" id="marketIcon"></span><div><strong>Yahoo market data</strong><small id="marketHealth">Checking…</small></div></div>
+          <div><span class="health-icon" id="taskIcon"></span><div><strong>Windows task</strong><small id="taskHealth">Open CLI health for task details.</small></div></div>
+        </div>
+        <div class="guardrail-copy">No fallback prices. No lower-model retry. No broker endpoint. News is treated only as untrusted evidence.</div>
+      </aside>
+    </section>
+
+    <section class="panel ledger-panel">
+      <div class="panel-heading">
+        <div><span class="eyebrow">Append-only paper ledger</span><h3>Order book</h3></div>
+        <strong id="orderCount">0 orders</strong>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Date</th><th>Symbol</th><th>Side</th><th>Alloc.</th><th>Qty.</th><th>Entry</th><th>Exit</th><th>P&amp;L</th><th>Equity</th><th>Conf.</th><th>Status</th></tr></thead>
+          <tbody id="ordersBody"><tr><td colspan="11" class="empty-cell">No settled paper orders yet.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="memory-grid">
+      <article class="panel memory-panel">
+        <div class="panel-heading"><div><span class="eyebrow">Bounded model memory</span><h3>Current playbook</h3></div><span class="status-pill neutral">CURRENT</span></div>
+        <div class="markdown" id="playbookContent">Loading…</div>
+      </article>
+      <article class="panel journal-panel">
+        <div class="panel-heading">
+          <div><span class="eyebrow">Immutable archive</span><h3>Daily journal</h3></div>
+          <select id="journalSelect" aria-label="Journal date"><option value="">No journals</option></select>
+        </div>
+        <div class="markdown" id="journalContent">A reflection is written after the first settled paper trade.</div>
+      </article>
+    </section>
+  </main>
+
+  <footer><span>AgentTrader v1</span><span>Loopback only · 127.0.0.1:4180</span><span>Paper-only experimentation — not investment advice</span></footer>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

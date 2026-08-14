@@ -1,0 +1,19 @@
+{
+  "name": "agenttrader",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Paper-only GPT-Max midday trading experiment",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "serve": "node src/cli.mjs serve",
+    "tick": "node src/cli.mjs tick",
+    "health": "node src/cli.mjs health",
+    "dry-run": "node src/cli.mjs dry-run",
+    "task:install": "node src/cli.mjs install-task",
+    "task:remove": "node src/cli.mjs remove-task",
+    "test": "node --test --test-concurrency=1"
+  }
+}
